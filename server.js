@@ -3,6 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
 const { Pool } = require("pg");
+const ExcelJS = require("exceljs");
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -32,14 +33,16 @@ app.post("/login", async (req, res) => {
       return res.status(401).json({ message: "ID invalid!" });
     }
 
-    const token = jwt.sign({ id: result.rows[0].id }, process.env.JWT_SECRET, { expiresIn: "1h" });
+    const user = result.rows[0];
+    const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, { expiresIn: "1h" });
 
-    res.json({ token, name: result.rows[0].name });
+    res.json({ token, name: user.name, role: user.role });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Eroare la autentificare!" });
   }
 });
+
 
 // Înregistrare tură
 app.post("/add-shift", async (req, res) => {
@@ -78,4 +81,50 @@ app.get("/shifts/:user_id", async (req, res) => {
 
 app.listen(port, () => {
   console.log(`🚀 Serverul rulează pe portul ${port}`);
+});
+
+app.get("/export", async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT u.name, u.unique_id, s.shift_number, s.kunde, s.auto, s.datum, s.start_time, s.end_time 
+      FROM shifts s
+      JOIN users u ON s.user_id = u.id
+      WHERE EXTRACT(MONTH FROM s.datum) = EXTRACT(MONTH FROM CURRENT_DATE)
+      ORDER BY s.datum DESC;
+    `);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: "Nu există ture pentru această lună!" });
+    }
+
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet("Ture lunare");
+
+    // Definim antetul
+    worksheet.columns = [
+      { header: "Nume", key: "name", width: 20 },
+      { header: "ID", key: "unique_id", width: 15 },
+      { header: "Ture", key: "shift_number", width: 10 },
+      { header: "Kunde", key: "kunde", width: 10 },
+      { header: "Auto", key: "auto", width: 15 },
+      { header: "Datum", key: "datum", width: 15 },
+      { header: "Start", key: "start_time", width: 10 },
+      { header: "Ende", key: "end_time", width: 10 },
+    ];
+
+    // Adăugăm datele
+    result.rows.forEach(row => {
+      worksheet.addRow(row);
+    });
+
+    // Generăm fișierul
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    res.setHeader("Content-Disposition", "attachment; filename=ture.xlsx");
+
+    await workbook.xlsx.write(res);
+    res.end();
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Eroare la export!" });
+  }
 });
