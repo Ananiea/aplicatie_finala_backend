@@ -8,9 +8,10 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 app.use(express.json());
+
 app.use(cors({
-  origin: "frontend-eta-inky-54.vercel.app", // Înlocuiește cu link-ul real al frontend-ului tău de pe Vercel
-  methods: "GET,POST",
+  origin: "*",
+  methods: "GET,POST,OPTIONS",
   allowedHeaders: "Content-Type,Authorization"
 }));
 
