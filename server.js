@@ -10,10 +10,13 @@ const port = process.env.PORT || 3000;
 app.use(express.json());
 
 app.use(cors({
-  origin: "*", // Permitem accesul de oriunde (poți schimba cu frontend-ul tău)
-  methods: "GET,POST",
+  origin: "https://frontend-eta-inky-54.vercel.app", // Permite doar frontend-ul tău
+  methods: "GET,POST,OPTIONS",
   allowedHeaders: "Content-Type,Authorization"
 }));
+
+// Asigură-te că gestionezi preflight requests (CORS OPTIONS)
+app.options("*", cors());
 
 // Configurare conexiune PostgreSQL
 const pool = new Pool({
