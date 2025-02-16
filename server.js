@@ -10,9 +10,10 @@ const port = process.env.PORT || 3000;
 
 // Configurare CORS pentru a permite frontend-ul de pe Vercel
 const corsOptions = {
-  origin: "https://frontend-eta-inky-54.vercel.app", // 🔥 Înlocuiește cu link-ul frontend-ului tău Vercel
+  origin: "*", // 🔥 TEMPORAR: permite toate originile. După ce verifici că merge, schimbă cu frontend-ul tău!
   methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-  credentials: true, // Permite autentificarea
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true,
 };
 
 app.use(express.json());
