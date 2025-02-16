@@ -49,6 +49,7 @@ app.post("/login", async (req, res) => {
   }
 });
 
+
 // Înregistrare tură
 app.post("/add-shift", async (req, res) => {
   const { user_id, shift_number, kunde, auto, datum, start_time, end_time } = req.body;
