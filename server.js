@@ -43,16 +43,25 @@ app.post("/login", async (req, res) => {
 
 // Înregistrare tură
 app.post("/add-shift", async (req, res) => {
-  const { user_id, total_hours } = req.body;
+  const { user_id, shift_number, kunde, auto, datum, start_time, end_time } = req.body;
+
+  // Validare simplă pentru a verifica dacă toate câmpurile sunt completate
+  if (!user_id || !shift_number || !kunde || !auto || !datum || !start_time || !end_time) {
+    return res.status(400).json({ message: "Alle Felder sind erforderlich!" }); // "Toate câmpurile sunt obligatorii!"
+  }
 
   try {
-    await pool.query("INSERT INTO shifts (user_id, total_hours) VALUES ($1, $2)", [user_id, total_hours]);
-    res.json({ message: "✅ Tură înregistrată cu succes!" });
+    await pool.query(
+      "INSERT INTO shifts (user_id, shift_number, kunde, auto, datum, start_time, end_time) VALUES ($1, $2, $3, $4, $5, $6, $7)",
+      [user_id, shift_number, kunde, auto, datum, start_time, end_time]
+    );
+    res.json({ message: "Schicht erfolgreich hinzugefügt!" }); // "Tură adăugată cu succes!"
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: "❌ Eroare la înregistrare!" });
+    res.status(500).json({ message: "Fehler beim Hinzufügen der Schicht!" }); // "Eroare la adăugare!"
   }
 });
+
 
 // Obținere ture curier
 app.get("/shifts/:user_id", async (req, res) => {
